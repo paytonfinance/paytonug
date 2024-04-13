@@ -9,6 +9,84 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  firstName String
+  lastName  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+}
+
+// Account model
+model Account {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  balance      Decimal       @default(0.0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  investments  Investment[]
+  transactions Transaction[]
+}
+
+// Investment Plan model
+model InvestmentPlan {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String?
+  duration     Int // Duration in days
+  interestRate Decimal // Interest rate as a percentage
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  investments  Investment[]
+}
+
+// Investment model
+model Investment {
+  id             Int              @id @default(autoincrement())
+  accountId      Int
+  account        Account          @relation(fields: [accountId], references: [id])
+  planId         Int
+  plan           InvestmentPlan   @relation(fields: [planId], references: [id])
+  amount         Decimal
+  startDate      DateTime
+  endDate        DateTime
+  expectedProfit Decimal
+  status         InvestmentStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+// Transaction model
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  accountId   Int
+  account     Account         @relation(fields: [accountId], references: [id])
+  type        TransactionType
+  amount      Decimal
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// Enums
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  PROFIT
 }
